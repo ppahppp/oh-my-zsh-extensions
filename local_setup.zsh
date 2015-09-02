@@ -52,6 +52,48 @@ function sql2mysql() {
     fi
 }
 
+function getVhostLocation(){
+   if [  -z $1  ]; then
+     echo ;
+     echo 'arguments missing';
+     echo 'getVhostLocation <<local_url>>';
+     echo 'please try again';
+  fi
+  #
+  # add ; to EOL
+  string=$(cat grep_test_vhost | sed -e"s/$/;/g");
+  #
+  # split vhosts by |
+  delimter='< *VirtualHost *\*:80 *>'
+  string=$(echo ${string} | sed -e"s/${delimter}/|/g");
+  #
+  # cycle through the delimitered sections
+  OIFS=$IFS;
+  IFS="|";
+  Array=($string);
+  for ((i=0; i<${#Array[@]}; ++i)); do
+          grepped=$( echo ${Array[$i]} | grep "$url" );
+          if [ ${#grepped} -gt 0 ]; then
+              myVhostDetails=$grepped;
+          fi
+  done
+  IFS=$OIFS;
+  #
+  # cycle through my vhost sections
+  OIFS=$IFS;
+  IFS=";";
+  Array=($myVhostDetails);
+  for ((i=0; i<${#Array[@]}; ++i)); do
+          grepped=$( echo ${Array[$i]} | grep 'DocumentRoot' );
+          if [ ${#grepped} -gt 0 ]; then
+              documentRoot=$(echo ${grepped} | sed -e"s/DocumentRoot//g"| sed -e"s/ *//g");
+          fi
+  done
+  IFS=$OIFS;
+  #
+  echo $documentRoot;
+}
+
 function update_localxml(){
    vhost_file_location='/etc/apache2/extra/httpd-vhosts.conf'
    if [  -z $1  ] || [  -z $2 ] ; then
@@ -63,17 +105,8 @@ function update_localxml(){
      database=$1
      url=$2
      grepped=$(grep -B 7 -A 8  ${url} $vhost_file_location)
-
-# egrep "ServerName|DocumentRoot" /etc/apache2/extra/httpd-vhosts.conf
-
-
-#echo grepped=$(echo $grepped |sed -e 's/<VirtualHost(\n|\r|.)*<\/VirtualHost/\1/')  #awk -F'VirtualHost|VirtualHost' '{print $2}')
-     grepped=$(echo $grepped |sed -e 's/Virtual/hbewfjhwe/'|cat)
-     echo $grepped 
-
-     location=$(echo $grepped | grep DocumentRoot | cut -f2 -d'"'  ) 
-    # echo 'location: '${location}
-    # sed -i "s/<dbname>.*<\/dbname>/<dbname><\!\[CDATA\[${database}\]\]><\/dbname>/g" ${location}/app/etc/local.xml
+     location=getVhostLocation ${url}
+     sed -i "s/<dbname>.*<\/dbname>/<dbname><\!\[CDATA\[${database}\]\]><\/dbname>/g" ${location}/app/etc/local.xml
   fi
 }
 
@@ -90,10 +123,19 @@ function mkvhost() {
     else
       subfolder=$1;
       url=$2;
+      echo "------- updating hosts file -------"
       echo '127.0.0.1 '$url >> ${hostsfile};
+      echo "------- updating vhosts file -------"
       vhostdefault=$(<${setupfile});
       vhostdetails=$( echo ${vhostdefault} | sed -e"s/myurl/${url}/" | sed -e"s/subfolder/${subfolder}/" );
       echo  $vhostdetails >> ${httpdvhosts};
+      echo "------- updating local.xml -------"
+      update_localxml ${url};
+      echo "------- flushing cache -------"
+      cd getVhostLocation;
+      n98-magerun.phar cache:flush;
+      echo "------- reindexing -------"
+      n98-magerun.phar index:reindex:all;
     fi  
 }
 
