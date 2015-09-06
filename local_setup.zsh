@@ -166,12 +166,14 @@ function setuplocal() {
       fi
       if [[ getVhostLocation ${url}!="" ]]; then
       	mkvhost $subfolder $url;
+        cd getVhostLocation ${url};
+        echo "------- adding .htaccess -------";
+        cp ~/Documents/local_setup_files/htaccess .htaccess
+        echo "------- copying local.xml -------";
+        cp ~/Documents/local_setup_files/local.xml app/etc
   	  fi;
       echo "------- updating local.xml -------";
       update_localxml ${db} ${url};
-      echo "------- updating local.xml -------";
-      cd getVhostLocation ${url};
-      cp ~/Documents/local_setup_files/.htaccess . 
       echo "------- flushing cache -------";
       n98-magerun.phar cache:flush;
       echo "------- reindexing -------";
