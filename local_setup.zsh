@@ -161,8 +161,8 @@ function setuplocal() {
       		tar2mysql $file $url $db;
       	fi
       else
- 		echo "error: unrecognised file format";
- 		exit;
+	echo "error: unrecognised file format";
+ 	exit;
       fi
       if [[ getVhostLocation ${url}!="" ]]; then
       	mkvhost $subfolder $url;
