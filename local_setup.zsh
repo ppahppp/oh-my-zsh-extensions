@@ -197,4 +197,9 @@ function setuplocal() {
       n98-magerun.phar index:reindex:all;
     fi
 }
-
+function list_localhosts(){
+  hosts_file_location='/etc/hosts';
+  string=$(grep '127.0.0.1' ${hosts_file_location} | sed -e"s/127.0.0.1//g");
+  string=$(echo $string | sed -e"s/\s//g");
+  echo $string;
+}
