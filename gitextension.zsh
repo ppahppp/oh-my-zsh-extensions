@@ -46,26 +46,13 @@ function gm2m (){
   BRANCH=$1;
   if [ -z $1 ]
   then
-    echo "sorry you didn't give me a branch to merge into master"
+   currentBranch=git rev-parse --abbrev-ref HEAD;
+   git_merge_branchs $currentBranch master;
   else
      git_merge_branchs $1 master;
   fi
 }
 compdef _git gm2m=git-merge
-
-# pull branch specified and merge to develop-new
-function gm2dn (){
-  git rev-parse --show-toplevel #first line has to be a git command for auto complete o work
-  BRANCH=$1;
-  if [ -z $1 ]
-  then
-    echo "sorry you didn't give me a branch to merge into develop-new"
-  else
-    git_merge_branchs $1 develop-new;
-  fi
-}
-compdef _git gm2dn=git-merge
-
 
 # pull branch specified and merge to develop
 function gm2d (){
@@ -73,7 +60,8 @@ function gm2d (){
   BRANCH=$1;
   if [ -z $1 ]
   then
-    echo "sorry you didn't give me a branch to merge into develop"
+     currentBranch=git rev-parse --abbrev-ref HEAD;
+     git_merge_branchs $currentBranch develop;
   else
     git_merge_branchs $1 develop;
   fi
