@@ -32,6 +32,7 @@ function sql2mysql() {
       url=$2;
       if [  -z $3  ]; then
         db=${${file%.sql}##*/}
+	db=${db//-/_} #make db name valid when created from filenames not valid db names
       else
         db=$3
       fi
@@ -67,9 +68,6 @@ function import2mysql(){
     fileextension="${file##*.}"; # last fil extension if example.sql.tar.gz it returns gz if example.sql returns sql
     # if sql file
     if [[ $fileextension == "sql" ]]; then
-      if [[ -z db ]]; then
-        db=${file%.sql};
-      fi;
       sql2mysql $file $url $db;
     # if ****.gz file
     elif [[ $fileextension == "gz" ]]; then
@@ -197,7 +195,7 @@ function setuplocal() {
       n98-magerun.phar index:reindex:all;
     fi
 }
-function list_localhosts(){
+function listhosts(){
   hosts_file_location='/etc/hosts';
   string=$(grep '127.0.0.1' ${hosts_file_location} | sed -e"s/127.0.0.1//g");
   string=$(echo $string | sed -e"s/\s//g");
