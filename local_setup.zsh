@@ -149,7 +149,7 @@ function mkvhost() {
     # file locations
     httpdvhosts='/etc/apache2/extra/httpd-vhosts.conf'
     hostsfile='/etc/hosts'
-    setupfile='~/Documents/local_setup_files/vhost_template.txt'
+    setupfile='~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt'
     if [  -z $1  ] || [  -z $2 ] ; then
       echo ;
       echo 'arguments missing'
@@ -184,9 +184,9 @@ function setuplocal() {
       echo "------- making vhost -------";
       mkvhost $subfolder $url;
       echo "------- adding .htaccess -------";
-      cp ~/Documents/local_setup_files/htaccess .htaccess
+      cp ~/Documents/oh-my-zsh-extensions/local_setup_files/htaccess .htaccess
       echo "------- copying local.xml -------";
-      cp ~/Documents/local_setup_files/local.xml app/etc
+      cp ~/Documents/oh-my-zsh-extensions/local_setup_files/local_setup_files/local.xml app/etc
       echo "------- updating local.xml -------";
       update_localxml ${db} ${url};
       echo "------- flushing cache -------";
