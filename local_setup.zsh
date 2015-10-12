@@ -1,4 +1,4 @@
-alias vhost_edit='echo "vi /private/etc/apache2/extra/httpd-vhosts.conf";vi /private/etc/apache2/extra/httpd-vhosts.conf'
+alias listdbs="mysql -uroot -proot -e'show databases'";
 
 function tar2mysql() {
   if [  -z $1  ] || [  -z $2 ] ; then
@@ -13,8 +13,9 @@ function tar2mysql() {
     echo $db
     echo '-->uncompressing file'
     tar -xzvf $file &&
-    sql2mysql ${file%.tar.gz}.sql $url $db 
-    echo '-->removing sql'
+    file=$( echo $file | sed 's/.*\///' ) &&
+    sql2mysql ${file%.tar.gz}.sql $url $db  &&
+    echo '-->removing sql' &&
     rm ${file} # $file redefined in sql2mysql() 
   fi
 }
@@ -32,8 +33,9 @@ function gz2mysql() {
     echo $db
     echo '-->uncompressing file'
     gunzip $file &&
-    sql2mysql ${file%.gz}.sql $url $db
-    echo '-->removing sql'
+    file=$( echo $file | sed 's/.*\///' ) &&
+    sql2mysql ${file%.gz}.sql $url $db &&
+    echo '-->removing sql' &&
     rm ${file} # $file redefined in sql2mysql()
   fi
 }
@@ -60,7 +62,7 @@ function sql2mysql() {
       if [ $dbexists -eq 1 ]; then
         echo '-->creating db'
         mysql -u${user} -p${password} -e"create database ${db}" 
-        echo '-->impoting db'
+        echo '-->importing db'
         mysql -u${user} -p${password} $db < $file 
         echo '-->updating db'
         table='core_config_data' 

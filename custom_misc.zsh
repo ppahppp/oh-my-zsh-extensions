@@ -8,7 +8,7 @@ alias rmcache='echo "rm -rf var/cache/* var/session/*"; rm -rf var/cache/* var/s
 alias phpstorm='/Applications/PhpStorm.app/Contents/MacOS/phpstorm'
 alias phpstorm_diff='/Applications/PhpStorm.app/Contents/MacOS/phpstorm diff'
 
-function customCommands(){
+function listCustomCommands(){
 	grep function ~/.oh-my-zsh/custom/gitextension.zsh | grep -v 'grep' | sed -e's/\s*function\s*//' | cut -f1 -d"(" ;
 	grep function ~/.oh-my-zsh/custom/local_setup.zsh | grep -v 'grep' | sed -e's/\s*function\s*//' | cut -f1 -d"(" ;
 	grep function ~/.oh-my-zsh/custom/custom_misc.zsh | grep -v 'grep' | sed -e's/\s*function\s*//' | cut -f1 -d"(" ;
