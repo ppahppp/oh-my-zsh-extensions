@@ -19,6 +19,25 @@ function tar2mysql() {
   fi
 }
 
+function gz2mysql() {
+  if [  -z $1  ] || [  -z $2 ] ; then
+    echo ;
+    echo 'arguments missing'
+    echo 'gz2mysql <<file>> <<url>> or tar2mysql <<file>> <<url>> <<db>>'
+    echo 'please try again'
+  else
+    file=$1
+    url=$2
+    db=$3
+    echo $db
+    echo '-->uncompressing file'
+    gunzip $file &&
+    sql2mysql ${file%.gz}.sql $url $db
+    echo '-->removing sql'
+    rm ${file} # $file redefined in sql2mysql()
+  fi
+}
+
 function sql2mysql() {
     user=root
     password=root
@@ -68,16 +87,22 @@ function import2mysql(){
     fileextension="${file##*.}"; # last fil extension if example.sql.tar.gz it returns gz if example.sql returns sql
     # if sql file
     if [[ $fileextension == "sql" ]]; then
+      echo "--> sql file detected"
       sql2mysql $file $url $db;
     # if ****.gz file
     elif [[ $fileextension == "gz" ]]; then
-      prevfileextension=${${file%.gz}##*.}; 
+	prevfileextension=${${file%.gz}##*.}; 
       # if tar.gz file
-      if [[ prevfileextension == "tar" ]]; then
+      if [[ $prevfileextension == "tar" ]]; then
         if [[ -z db ]]; then
-          db=${file%.tar.gz};
+            echo "--> tar.gz file detected"
+	   db=${file%.tar.gz};
         fi;
         tar2mysql $file $url $db;
+      else
+        echo "--> gz file detected"
+        db=${file%.gz};
+        gz2mysql $file $url $db;
       fi
     else
       echo "error: unrecognised file format";
@@ -195,17 +220,19 @@ function setuplocal() {
       dbfile=$2;
       url=$3;
       dbname=$4;
-      echo "------- adding .htaccess -------";
+      echo "------- importing database -------";
       import2mysql $dbfile $url $dbname;
       echo "------- making vhost -------";
       mkvhost $subfolder $url;
       echo "------- adding .htaccess -------";
       cp ~/Documents/oh-my-zsh-extensions/local_setup_files/htaccess .htaccess
       echo "------- copying local.xml -------";
-      cp ~/Documents/oh-my-zsh-extensions/local_setup_files/local_setup_files/local.xml app/etc
+      cp ~/Documents/oh-my-zsh-extensions/local_setup_files/local.xml app/etc
       echo "------- updating local.xml -------";
       update_localxml ${db} ${url};
       echo "------- flushing cache -------";
+      repos;
+      cd $subfolder
       n98-magerun.phar cache:flush;
       echo "------- reindexing -------";
       n98-magerun.phar index:reindex:all;
