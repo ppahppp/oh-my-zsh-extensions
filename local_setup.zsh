@@ -158,13 +158,29 @@ function mkvhost() {
     else
       subfolder=$1;
       url=$2;
-      echo "--> updating hosts file"
-      echo '127.0.0.1 '$url >> ${hostsfile};
-      echo "--> updating vhosts file"
-      vhostdefault=$(<${setupfile});
-      vhostdetails=$( echo ${vhostdefault} | sed -e"s/myurl/${url}/" | sed -e"s/subfolder/${subfolder}/" );
-      echo  $vhostdetails >> ${httpdvhosts};
-      sudo apachectl restart;
+      inHosts=$(grep -q "${url}$" /etc/hosts);
+      if [  -n $inHosts  ] ; then 
+	 echo "--> no need to update hosts file"
+      else
+      	 echo "--> updating hosts file"
+	 echo '127.0.0.1 '$url >> ${hostsfile};
+      fi
+      inVhosts=$(grep -q "${url}$" /etc/hosts);
+      if [  -n $inVhosts  ] ; then
+          echo "--> no need to update vhosts file"
+      else
+	  echo "--> updating vhosts file"
+          #vhostdefault=$( cat < ${setupfile} );
+          vhostdefault=$(cat ~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt );
+          vhostdetails=$( echo ${vhostdefault} | sed -e"s/myurl/${url}/" | sed -e"s/subfolder/${subfolder}/" );
+          echo  $vhostdetails >> ${httpdvhosts};
+      fi
+      if [  -n $inHosts  ] && [  -n $inVhosts  ]; then
+         echo "--> no need to restart server"
+      else
+         echo "--> restarting server"         
+	 sudo apachectl restart
+      fi
     fi  
 }
 
