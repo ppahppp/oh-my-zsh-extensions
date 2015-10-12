@@ -14,7 +14,8 @@ function tar2mysql() {
     echo '-->uncompressing file'
     tar -xzvf $file &&
     file=$( echo $file | sed 's/.*\///' ) &&
-    sql2mysql ${file%.tar.gz}.sql $url $db  &&
+    file=$( echo $file | sed 's/\..*///' ) &&  # remove other file extensions as frquently
+    sql2mysql ${file}.sql $url $db  &&
     echo '-->removing sql' &&
     rm ${file} # $file redefined in sql2mysql() 
   fi
@@ -34,7 +35,8 @@ function gz2mysql() {
     echo '-->uncompressing file'
     gunzip $file &&
     file=$( echo $file | sed 's/.*\///' ) &&
-    sql2mysql ${file%.gz}.sql $url $db &&
+    file=$( echo $file | sed 's/\..*///' ) &&  # remove other file extensions as frquently
+    sql2mysql ${file}.sql $url $db &&
     echo '-->removing sql' &&
     rm ${file} # $file redefined in sql2mysql()
   fi
@@ -93,12 +95,12 @@ function import2mysql(){
       sql2mysql $file $url $db;
     # if ****.gz file
     elif [[ $fileextension == "gz" ]]; then
-	prevfileextension=${${file%.gz}##*.}; 
+      prevfileextension=${${file%.gz}##*.}; 
       # if tar.gz file
       if [[ $prevfileextension == "tar" ]]; then
         if [[ -z db ]]; then
             echo "--> tar.gz file detected"
-	   db=${file%.tar.gz};
+            db=${file%.tar.gz};
         fi;
         tar2mysql $file $url $db;
       else
@@ -187,16 +189,16 @@ function mkvhost() {
       url=$2;
       inHosts=$(grep -q "${url}$" /etc/hosts);
       if [  -n $inHosts  ] ; then 
-	 echo "--> no need to update hosts file"
+         echo "--> no need to update hosts file"
       else
       	 echo "--> updating hosts file"
-	 echo '127.0.0.1 '$url >> ${hostsfile};
+         echo '127.0.0.1 '$url >> ${hostsfile};
       fi
       inVhosts=$(grep -q "${url}$" /etc/hosts);
       if [  -n $inVhosts  ] ; then
           echo "--> no need to update vhosts file"
       else
-	  echo "--> updating vhosts file"
+          echo "--> updating vhosts file"
           #vhostdefault=$( cat < ${setupfile} );
           vhostdefault=$(cat ~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt );
           vhostdetails=$( echo ${vhostdefault} | sed -e"s/myurl/${url}/" | sed -e"s/subfolder/${subfolder}/" );
@@ -205,8 +207,8 @@ function mkvhost() {
       if [  -n $inHosts  ] && [  -n $inVhosts  ]; then
          echo "--> no need to restart server"
       else
-         echo "--> restarting server"         
-	 sudo apachectl restart
+         echo "--> restarting server"
+         sudo apachectl restart
       fi
     fi  
 }
