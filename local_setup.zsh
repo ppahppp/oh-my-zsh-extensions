@@ -187,26 +187,25 @@ function mkvhost() {
     else
       subfolder=$1;
       url=$2;
-      inHosts='false'
-      inHosts=$(grep -q "${url}$" /etc/hosts);
-      if [  $inHosts = 'false'  ] ; then 
+      restart="false";
+      if grep -q "${url}$" /etc/hosts ; then 
          echo "--> no need to update hosts file"
       else
       	 echo "--> updating hosts file"
          echo '127.0.0.1 '$url >> ${hostsfile};
+         restart="true";
       fi
-      inVhosts='false'
-      inVhosts=$(grep -q "${url}$" /etc/apache2/extra/httpd-vhosts.conf);
-      if [ $inVhosts = 'false'  ] ; then
+      if grep -q "${url}$" /etc/apache2/extra/httpd-vhosts.conf ; then
           echo "--> no need to update vhosts file"
       else
           echo "--> updating vhosts file"
           #vhostdefault=$( cat < ${setupfile} );
           vhostdefault=$(cat ~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt );
-          vhostdetails=$( echo ${vhostdefault} | sed -e"s/myurl/${url}/" | sed -e"s/subfolder/${subfolder}/" );
+          vhostdetails=$( echo "${vhostdefault}" | sed -e"s/myurl/${url}/" | sed -e"s/subfolder/${subfolder}/" );
           echo  $vhostdetails >> ${httpdvhosts};
+          restart="true";
       fi
-      if [  $inHosts = 'false' ] && [  $inVhosts = 'false' ]; then
+      if [ "$restart" = "false" ] ; then
          echo "--> no need to restart server"
       else
          echo "--> restarting server"
@@ -246,7 +245,12 @@ function setuplocal() {
 }
 function listhosts(){
   hosts_file_location='/etc/hosts';
-  string=$(grep '127.0.0.1' ${hosts_file_location} | sed -e"s/127.0.0.1//g");
-  string=$(echo $string | sed -e"s/\s//g");
+  string=$( grep '127.0.0.1' ${hosts_file_location} | sed -e"s/127.0.0.1//g");
+  if [ -z $1 ] ; then
+    string=$(echo $string | sed -e"s/\s//g");
+  else
+    string=$( echo $string | grep $1 );
+    string=$(echo $string | sed -e"s/\s//g");
+  fi
   echo $string;
 }
