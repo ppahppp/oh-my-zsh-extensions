@@ -14,7 +14,7 @@ function tar2mysql() {
     echo '-->uncompressing file'
     tar -xzvf $file &&
     file=$( echo $file | sed 's/.*\///' ) &&
-    file=$( echo $file | sed 's/\..*///' ) &&  # remove other file extensions as frquently
+    file=$( echo $file | sed 's/\..*///' ) &&  # remove other file extensions
     sql2mysql ${file}.sql $url $db  &&
     echo '-->removing sql' &&
     rm ${file} # $file redefined in sql2mysql() 
@@ -35,7 +35,7 @@ function gz2mysql() {
     echo '-->uncompressing file'
     gunzip $file &&
     file=$( echo $file | sed 's/.*\///' ) &&
-    file=$( echo $file | sed 's/\..*///' ) &&  # remove other file extensions as frquently
+    file=$( echo $file | sed 's/\..*///' ) &&  # remove other file extensions
     sql2mysql ${file}.sql $url $db &&
     echo '-->removing sql' &&
     rm ${file} # $file redefined in sql2mysql()
@@ -187,15 +187,17 @@ function mkvhost() {
     else
       subfolder=$1;
       url=$2;
+      inHosts='false'
       inHosts=$(grep -q "${url}$" /etc/hosts);
-      if [  -n $inHosts  ] ; then 
+      if [  $inHosts = 'false'  ] ; then 
          echo "--> no need to update hosts file"
       else
       	 echo "--> updating hosts file"
          echo '127.0.0.1 '$url >> ${hostsfile};
       fi
-      inVhosts=$(grep -q "${url}$" /etc/hosts);
-      if [  -n $inVhosts  ] ; then
+      inVhosts='false'
+      inVhosts=$(grep -q "${url}$" /etc/apache2/extra/httpd-vhosts.conf);
+      if [ $inVhosts = 'false'  ] ; then
           echo "--> no need to update vhosts file"
       else
           echo "--> updating vhosts file"
@@ -204,7 +206,7 @@ function mkvhost() {
           vhostdetails=$( echo ${vhostdefault} | sed -e"s/myurl/${url}/" | sed -e"s/subfolder/${subfolder}/" );
           echo  $vhostdetails >> ${httpdvhosts};
       fi
-      if [  -n $inHosts  ] && [  -n $inVhosts  ]; then
+      if [  $inHosts = 'false' ] && [  $inVhosts = 'false' ]; then
          echo "--> no need to restart server"
       else
          echo "--> restarting server"
@@ -235,7 +237,7 @@ function setuplocal() {
       echo "------- updating local.xml -------";
       update_localxml ${db} ${url};
       echo "------- flushing cache -------";
-      repos;
+      repos; # move to repos folder
       cd $subfolder
       n98-magerun.phar cache:flush;
       echo "------- reindexing -------";
