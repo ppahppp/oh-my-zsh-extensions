@@ -14,7 +14,7 @@ function tar2mysql() {
     echo '-->uncompressing file'
     tar -xzvf $file &&
     file=$( echo $file | sed 's/.*\///' ) &&
-    file=$( echo $file | sed 's/\..*///' ) &&  # remove other file extensions
+    file=$( echo $file | sed 's/\..*//' ) &&  # remove other file extensions
     sql2mysql ${file}.sql $url $db  &&
     echo '-->removing sql' &&
     rm ${file} # $file redefined in sql2mysql() 
@@ -55,12 +55,11 @@ function sql2mysql() {
       url=$2;
       if [  -z $3  ]; then
         db=${${file%.sql}##*/}
-	db=${db//-/_} #make db name valid when created from filenames not valid db names
+        db=${db//-/_} #make db name valid when created from filenames not valid db names
       else
         db=$3
       fi
         dbexists=$(mysql -u${user} -p${password} --batch --skip-column-names -e "SHOW DATABASES LIKE '"${db}"';" | grep "${db}" > /dev/null; echo "$?")
-        echo $dbexists
       if [ $dbexists -eq 1 ]; then
         echo '-->creating db'
         mysql -u${user} -p${password} -e"create database ${db}" 
@@ -88,7 +87,7 @@ function import2mysql(){
     file=$1;
     url=$2;
     db=$3;
-    fileextension="${file##*.}"; # last fil extension if example.sql.tar.gz it returns gz if example.sql returns sql
+    fileextension="${file##*.}"; # last file extension if example.sql.tar.gz it returns gz if example.sql returns sql
     # if sql file
     if [[ $fileextension == "sql" ]]; then
       echo "--> sql file detected"
@@ -199,10 +198,17 @@ function mkvhost() {
           echo "--> no need to update vhosts file"
       else
           echo "--> updating vhosts file"
-          #vhostdefault=$( cat < ${setupfile} );
-          vhostdefault=$(cat ~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt );
-          vhostdetails=$( echo "${vhostdefault}" | sed -e"s/myurl/${url}/" | sed -e"s/subfolder/${subfolder}/" );
-          echo  $vhostdetails >> ${httpdvhosts};
+          #vhostdefault=$( cat "${setupfile}"" );
+          
+          #vhostdefault=$(cat ~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt );
+         # vhostdetails=$( echo "${vhostdefault}" | sed -e"s/myurl/${url}/" | sed -e"s/subfolder/${subfolder}/" );
+          #echo  $vhostdetails >> ${httpdvhosts};
+          
+          cp ~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt ~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt.swp
+          sed -i "s/myurl/${url}/" ~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt.swp
+          sed -i "s/subfolder/${subfolder}/" ~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt.swp
+          cat ~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt.swp >> ${httpdvhosts};
+          
           restart="true";
       fi
       if [ "$restart" = "false" ] ; then
@@ -214,35 +220,49 @@ function mkvhost() {
     fi  
 }
 
-function setuplocal() {
+function setupLocal() {
   if [  -z $1  ] || [  -z $2 ] || [  -z $3 ] ; then
       echo ;
       echo 'arguments missing'
-      echo 'setuplocal <<sub folder>> <<db file>> <<url>> or setuplocal <<sub folder>> <<db file>> <<url>> <<db>>'
+      echo 'setupLocal <<sub folder>> <<db file>> <<url>>  or setuplocal <<sub folder>> <<db file>> <<url>> <<htdocs location>> or setuplocal <<sub folder>> <<db file>> <<url>> <<htdocs location>> <<db>>'
       echo 'please try again'
     else  
       subfolder=$1;
       dbfile=$2;
       url=$3;
-      dbname=$4;
+      htdocsLocation=$4
+      if [  -z $5  ] ; then
+         dbname=$( echo $dbfile | sed 's/.*\///' ) &&
+         dbname=$( echo $dbname | sed 's/\..*///' )
+         dbname=${db//-/_}
+      else
+	dbname=$5      
+      fi
       echo "------- importing database -------";
       import2mysql $dbfile $url $dbname;
       echo "------- making vhost -------";
-      mkvhost $subfolder $url;
+      if [  -z $htdocsLocation  ] ; then
+          mkvhost $subfolder $url;
+      else
+          mkvhost "$subfolder\/$htdocsLocation" $url;
+      fi
       echo "------- adding .htaccess -------";
+      repo; # move to repos folder
+      cd $subfolder
+      cd $htdocsLocation
       cp ~/Documents/oh-my-zsh-extensions/local_setup_files/htaccess .htaccess
       echo "------- copying local.xml -------";
       cp ~/Documents/oh-my-zsh-extensions/local_setup_files/local.xml app/etc
       echo "------- updating local.xml -------";
-      update_localxml ${db} ${url};
+      update_localxml ${dbname} ${url};
       echo "------- flushing cache -------";
-      repos; # move to repos folder
-      cd $subfolder
       n98-magerun.phar cache:flush;
-      echo "------- reindexing -------";
-      n98-magerun.phar index:reindex:all;
+      #echo "------- reindexing -------";
+      #n98-magerun.phar index:reindex:all;
     fi
 }
+alias localSetup='setupLocal'
+
 function listhosts(){
   hosts_file_location='/etc/hosts';
   string=$( grep '127.0.0.1' ${hosts_file_location} | sed -e"s/127.0.0.1//g");
