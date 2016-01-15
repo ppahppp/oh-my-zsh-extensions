@@ -220,11 +220,11 @@ function mkvhost() {
     fi  
 }
 
-function setupLocal() {
+function setupLocalMagento() {
   if [  -z $1  ] || [  -z $2 ] || [  -z $3 ] ; then
       echo ;
       echo 'arguments missing'
-      echo 'setupLocal <<sub folder>> <<db file>> <<url>>  or setuplocal <<sub folder>> <<db file>> <<url>> <<htdocs location>> or setuplocal <<sub folder>> <<db file>> <<url>> <<htdocs location>> <<db>>'
+      echo 'setupLocalMagento <<sub folder>> <<db file>> <<url>>  or setupLocalMagento <<sub folder>> <<db file>> <<url>> <<htdocs location>> or setupLocalMagento <<sub folder>> <<db file>> <<url>> <<htdocs location>> <<db>>'
       echo 'please try again'
     else  
       subfolder=$1;
@@ -261,7 +261,6 @@ function setupLocal() {
       #n98-magerun.phar index:reindex:all;
     fi
 }
-alias localSetup='setupLocal'
 
 function listhosts(){
   hosts_file_location='/etc/hosts';
