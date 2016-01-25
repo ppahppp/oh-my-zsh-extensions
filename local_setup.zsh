@@ -1,5 +1,8 @@
 alias listdbs="mysql -uroot -proot -e'show databases'";
 
+
+# import sql file inside a tar.gz file into sql database it creates
+# only works fro ***.tar.gz files not ***.sql.tar.gz
 function tar2mysql() {
   if [  -z $1  ] || [  -z $2 ] ; then
     echo ;
@@ -21,6 +24,7 @@ function tar2mysql() {
   fi
 }
 
+# import sql file inside a gz file into sql database it creates
 function gz2mysql() {
   if [  -z $1  ] || [  -z $2 ] ; then
     echo ;
@@ -42,6 +46,7 @@ function gz2mysql() {
   fi
 }
 
+# inport sql file into sql database it creates
 function sql2mysql() {
     user=root
     password=root
@@ -78,6 +83,7 @@ function sql2mysql() {
     fi
 }
 
+# import sql file into sql database it creates
 function import2mysql(){
   if [  -z $1  ] ; then
     echo ;
@@ -116,6 +122,7 @@ function import2mysql(){
   fi
 }
 
+# get vhost location
 function getVhostLocation() {
    if [  -z $1  ]; then
      echo ;
@@ -159,6 +166,7 @@ function getVhostLocation() {
   echo ${documentRoot};
 }
 
+# update local.xml with new db details (for magento 1.**)
 function update_localxml() {
    vhost_file_location='/etc/apache2/extra/httpd-vhosts.conf'
    if [  -z $1  ] || [  -z $2 ] ; then
@@ -175,6 +183,7 @@ function update_localxml() {
   fi
 }
 
+# make vhost but dont setup magento
 function mkvhost() {
     # file locations
     httpdvhosts='/etc/apache2/extra/httpd-vhosts.conf'
@@ -222,6 +231,7 @@ function mkvhost() {
     fi  
 }
 
+# make vhost and setup magento
 function setupLocalMagento() {
   if [  -z $1  ] || [  -z $2 ] || [  -z $3 ] ; then
       echo ;
@@ -264,6 +274,7 @@ function setupLocalMagento() {
     fi
 }
 
+# list all my vhosts in hosts file that are local
 function listhosts(){
   hosts_file_location='/etc/hosts';
   string=$( grep '127.0.0.1' ${hosts_file_location} | sed -e"s/127.0.0.1//g" | sort);
