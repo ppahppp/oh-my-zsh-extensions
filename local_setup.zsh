@@ -10,12 +10,12 @@ function tar2mysql() {
     file=$1
     url=$2
     db=$3
-    echo $db
+    echo ${db}
     echo '-->uncompressing file'
-    tar -xzvf $file &&
-    file=$( echo $file | sed 's/.*\///' ) &&
-    file=$( echo $file | sed 's/\..*//' ) &&  # remove other file extensions
-    sql2mysql ${file}.sql $url $db  &&
+    tar -xzvf ${file} &&
+    file=$( echo ${file} | sed 's/.*\///' ) &&
+    file=$( echo ${file} | sed 's/\..*//' ) &&  # remove other file extensions
+    sql2mysql ${file}.sql ${url} ${db}  &&
     echo '-->removing sql' &&
     rm ${file} # $file redefined in sql2mysql() 
   fi
@@ -31,12 +31,12 @@ function gz2mysql() {
     file=$1
     url=$2
     db=$3
-    echo $db
+    echo ${db}
     echo '-->uncompressing file'
-    gunzip $file &&
-    file=$( echo $file | sed 's/.*\///' ) &&
-    file=$( echo $file | sed 's/\..*///' ) &&  # remove other file extensions
-    sql2mysql ${file}.sql $url $db &&
+    gunzip ${file} &&
+    file=$( echo ${file} | sed 's/.*\///' ) &&
+    file=$( echo ${file} | sed 's/\..*///' ) &&  # remove other file extensions
+    sql2mysql ${file}.sql ${url} ${db} &&
     echo '-->removing sql' &&
     rm ${file} # $file redefined in sql2mysql()
   fi
@@ -54,13 +54,14 @@ function sql2mysql() {
       file=$1;
       url=$2;
       if [  -z $3  ]; then
-        db=${${file%.sql}##*/}
-        db=${db//-/_} #make db name valid when created from filenames not valid db names
+        db=${file%.sql};
+        db=${db##*/};
+        db=${db//-/_}; #make db name valid when created from filenames not valid db names
       else
-        db=$3
+        db=$3;
       fi
         dbexists=$(mysql -u${user} -p${password} --batch --skip-column-names -e "SHOW DATABASES LIKE '"${db}"';" | grep "${db}" > /dev/null; echo "$?")
-      if [ $dbexists -eq 1 ]; then
+      if [ ${dbexists} -eq 1 ]; then
         echo '-->creating db'
         mysql -u${user} -p${password} -e"create database ${db}" 
         echo '-->importing db'
@@ -80,32 +81,33 @@ function sql2mysql() {
 function import2mysql(){
   if [  -z $1  ] ; then
     echo ;
-    echo 'arguments missing'
-    echo 'import2mysql <<db file>> <<url>> or import2mysql <db file>> <<url>> <<db>>'
-    echo 'please try again'
+    echo 'arguments missing';
+    echo 'import2mysql <<db file>> <<url>> or import2mysql <db file>> <<url>> <<db>>';
+    echo 'please try again';
   else 
     file=$1;
     url=$2;
     db=$3;
     fileextension="${file##*.}"; # last file extension if example.sql.tar.gz it returns gz if example.sql returns sql
     # if sql file
-    if [[ $fileextension == "sql" ]]; then
+    if [[ ${fileextension} == "sql" ]]; then
       echo "--> sql file detected"
-      sql2mysql $file $url $db;
+      sql2mysql ${file} ${url} ${db};
     # if ****.gz file
-    elif [[ $fileextension == "gz" ]]; then
-      prevfileextension=${${file%.gz}##*.}; 
+    elif [[ ${fileextension} == "gz" ]]; then
+      prevfileextension=${file%.gz};
+      prevfileextension=${prevfileextension##*.};
       # if tar.gz file
-      if [[ $prevfileextension == "tar" ]]; then
+      if [[ ${prevfileextension} == "tar" ]]; then
         if [[ -z db ]]; then
             echo "--> tar.gz file detected"
             db=${file%.tar.gz};
         fi;
-        tar2mysql $file $url $db;
+        tar2mysql ${file} ${url} ${db};
       else
         echo "--> gz file detected"
         db=${file%.gz};
-        gz2mysql $file $url $db;
+        gz2mysql ${file} ${url} ${db};
       fi
     else
       echo "error: unrecognised file format";
@@ -131,30 +133,30 @@ function getVhostLocation() {
   string=$(echo ${string} | sed -e"s/${delimter}/|/g");
   #
   # cycle through the delimitered sections
-  OIFS=$IFS;
+  OIFS=${IFS};
   IFS="|";
-  Array=($string);
+  Array=(${string});
   for ((i=0; i<${#Array[@]}; ++i)); do
     grepped=$( echo ${Array[$i]} | grep "$url" );
     if [ ${#grepped} -gt 0 ]; then
-        myVhostDetails=$grepped;
+        myVhostDetails=${grepped};
     fi
   done
-  IFS=$OIFS;
+  IFS=${OIFS};
   #
   # cycle through my vhost sections
   OIFS=$IFS;
   IFS=";";
-  Array=($myVhostDetails);
+  Array=(${myVhostDetails});
   for ((i=0; i<${#Array[@]}; ++i)); do
     grepped=$( echo ${Array[$i]} | grep 'DocumentRoot' );
     if [ ${#grepped} -gt 0 ]; then
       documentRoot=$(echo ${grepped} | sed -e"s/DocumentRoot//g"| sed -e"s/ *//g");
     fi
   done
-  IFS=$OIFS;
+  IFS=${OIFS};
   #
-  echo $documentRoot;
+  echo ${documentRoot};
 }
 
 function update_localxml() {
@@ -167,8 +169,8 @@ function update_localxml() {
    else
      database=$1
      url=$2
-     grepped=$(grep -B 7 -A 8  ${url} $vhost_file_location)
-     location=getVhostLocation ${url}
+     grepped=$(grep -B 7 -A 8  ${url} ${vhost_file_location})
+     location=getVhostLocation ${url};
      sed -i "s/<dbname>.*<\/dbname>/<dbname><\!\[CDATA\[${database}\]\]><\/dbname>/g" ${location}/app/etc/local.xml
   fi
 }
@@ -191,7 +193,7 @@ function mkvhost() {
          echo "--> no need to update hosts file"
       else
       	 echo "--> updating hosts file"
-         echo '127.0.0.1 '$url >> ${hostsfile};
+         echo '127.0.0.1 '${url} >> ${hostsfile};
          restart="true";
       fi
       if grep -q "${url}$" /etc/apache2/extra/httpd-vhosts.conf ; then
@@ -232,24 +234,24 @@ function setupLocalMagento() {
       url=$3;
       htdocsLocation=$4
       if [  -z $5  ] ; then
-         dbname=$( echo $dbfile | sed 's/.*\///' ) &&
-         dbname=$( echo $dbname | sed 's/\..*///' )
+         dbname=$( echo ${dbfile} | sed 's/.*\///' ) &&
+         dbname=$( echo ${dbname} | sed 's/\..*///' )
          dbname=${db//-/_}
       else
-	dbname=$5      
+      dbname=$5
       fi
       echo "------- importing database -------";
-      import2mysql $dbfile $url $dbname;
+      import2mysql ${dbfile} ${url} ${dbname};
       echo "------- making vhost -------";
-      if [  -z $htdocsLocation  ] ; then
-          mkvhost $subfolder $url;
+      if [  -z ${htdocsLocation}  ] ; then
+          mkvhost ${subfolder} ${url};
       else
-          mkvhost "$subfolder\/$htdocsLocation" $url;
+          mkvhost "$subfolder\/$htdocsLocation" ${url};
       fi
       echo "------- adding .htaccess -------";
       repo; # move to repos folder
-      cd $subfolder
-      cd $htdocsLocation
+      cd ${subfolder}
+      cd ${htdocsLocation}
       cp ~/Documents/oh-my-zsh-extensions/local_setup_files/htaccess .htaccess
       echo "------- copying local.xml -------";
       cp ~/Documents/oh-my-zsh-extensions/local_setup_files/local.xml app/etc
@@ -266,10 +268,10 @@ function listhosts(){
   hosts_file_location='/etc/hosts';
   string=$( grep '127.0.0.1' ${hosts_file_location} | sed -e"s/127.0.0.1//g" | sort);
   if [ -z $1 ] ; then
-    string=$(echo $string | sed -e"s/\s//g");
+    string=$(echo ${string} | sed -e"s/\s//g");
   else
-    string=$( echo $string | grep $1 );
-    string=$(echo $string | sed -e"s/\s//g");
+    string=$( echo ${string} | grep $1 );
+    string=$(echo ${string} | sed -e"s/\s//g");
   fi
-  echo $string;
+  echo ${string};
 }
