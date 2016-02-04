@@ -139,6 +139,20 @@ function getVhostLocation() {
   fi
   vhost_file_location=$( grep --files-with-matches "${url}" $vhost_folder_location/* )
   string=$(cat ${vhost_file_location})
+
+#[^<]*ServerName[[:space:]]*l\.magento[[:space:]][^>]*
+#sed -n "s/\(l\.magento1\)/\1/p"
+#  sed -n "s/\([^<]*ServerName[[:space:]]*l\.magento1[[:space:]]*[^>]*\)/\1/p" 
+
+#onto single line
+string=$( echo "${string}" | sed -e 's/$/;/g' | sed ':a;N;$!ba;s/\n//g' );
+# fetch section 
+string=$( echo "${string}" | sed -n "s/.*\(<[^<]*ServerName[[:space:]]*${url}[[:space:]]*;[^>]*>\).*/\1/p");
+string=$( echo "${string}" | sed -n "s/.*;[[:space:]]*DocumentRoot[[:space:]]*\([^ ;]*\).*/\1/p" );
+#echo string=$( echo "${string}" | sed "s/\([^<]*ServerName[[:space:]]*l\.magento1[[:space:]][^>]*\)/\1/p");
+echo $string; return 1
+#cat /etc/apache2/sites-available/test.conf | sed -e 's/$/;/g' | sed ':a;N;$!ba;s/\n//g' | sed -n "s/\([^<]*ServerName[[:space:]]*l\.magento12[[:space:]]*;[^>]*\)/\1/p" 
+
   #
   # remove spaces
   # spaces -> \
@@ -147,9 +161,9 @@ function getVhostLocation() {
   string=$( echo "${string}" | sed -e 's/$/;/g' | sed ':a;N;$!ba;s/\n//g' );
   # add spaces to allow patern matching of space separetd sections
   delimter='<|*VirtualHost|*\*:80|*>'
-  string=$( echo "${string}" | sed "s/${delimter}//g" );
-  delimter='<|*\/|*VirtualHost|*>'
-  string=$( echo "${string}" | sed -e "s/${delimter}/ /g" );
+  # string=$( echo "${string}" | sed "s/${delimter}//g" );
+  delimter2='<|*\/|*VirtualHost|*>'
+  # string=$( echo "${string}" | sed -e "s/${delimter2}/ /g" );
   # return section that has our server info
   string=$(echo "${string}" | grep -oe "[^ ]*ServerName[|;][|;]*${url}[|;][|;]*[^ ]*")
   # retrun the folderloaction
