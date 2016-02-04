@@ -16,8 +16,8 @@ function tar2mysql() {
     echo ${db}
     echo '-->uncompressing file'
     tar -xzvf ${file} &&
-    file=$( echo ${file} | sed 's/.*\///' ) &&
-    file=$( echo ${file} | sed 's/\..*//' ) &&  # remove other file extensions
+    file=${file%.*} &&
+    file=${file##*/} &&
     sql2mysql ${file}.sql ${url} ${db}  &&
     echo '-->removing sql' &&
     rm ${file} # $file redefined in sql2mysql() 
@@ -38,8 +38,8 @@ function gz2mysql() {
     echo ${db}
     echo '-->uncompressing file'
     gunzip ${file} &&
-    file=$( echo ${file} | sed 's/.*\///' ) &&
-    file=$( echo ${file} | sed 's/\..*///' ) &&  # remove other file extensions
+    file=${file%.*} &&
+    file=${file##*/} &&
     sql2mysql ${file}.sql ${url} ${db} &&
     echo '-->removing sql' &&
     rm ${file} # $file redefined in sql2mysql()
@@ -117,52 +117,41 @@ function import2mysql(){
       fi
     else
       echo "error: unrecognised file format";
-      exit;
+      return 1;
     fi
   fi
 }
 
 # get vhost location
+######## needs work ########
 function getVhostLocation() {
    if [  -z $1  ]; then
      echo ;
      echo 'arguments missing';
      echo 'getVhostLocation <<url>>';
      echo 'please try again';
+     return 1;
   fi
-  #
+  url=$1
   vhost_file_location='/etc/apache2/extra/httpd-vhosts.conf';
-  # add ; to EOL
-  string=$(cat ${vhost_file_location} | sed -e"s/$/;/g");
+  string=$(cat ${vhost_file_location})
   #
-  # split vhosts by |
-  delimter='< *VirtualHost *\*:80 *>'
-  string=$(echo ${string} | sed -e"s/${delimter}/|/g");
-  #
-  # cycle through the delimitered sections
-  OIFS=${IFS};
-  IFS="|";
-  Array=(${string});
-  for ((i=0; i<${#Array[@]}; ++i)); do
-    grepped=$( echo ${Array[$i]} | grep "$url" );
-    if [ ${#grepped} -gt 0 ]; then
-        myVhostDetails=${grepped};
-    fi
-  done
-  IFS=${OIFS};
-  #
-  # cycle through my vhost sections
-  OIFS=$IFS;
-  IFS=";";
-  Array=(${myVhostDetails});
-  for ((i=0; i<${#Array[@]}; ++i)); do
-    grepped=$( echo ${Array[$i]} | grep 'DocumentRoot' );
-    if [ ${#grepped} -gt 0 ]; then
-      documentRoot=$(echo ${grepped} | sed -e"s/DocumentRoot//g"| sed -e"s/ *//g");
-    fi
-  done
-  IFS=${OIFS};
-  #
+  # remove spaces
+  # spaces -> \
+  string=$( echo "${string}" | sed "s/[[:space:]]/|/g");
+  # add ||; to EOL and put into single line
+  string=$( echo "${string}" | sed -e 's/$/;/g' | sed ':a;N;$!ba;s/\n//g' );
+  # add spaces to allow patern matching of space separetd sections
+  delimter='<|*VirtualHost|*\*:80|*>'
+  string=$( echo "${string}" | sed "s/${delimter}//g" );
+  delimter='<|*\/|*VirtualHost|*>'
+  string=$( echo "${string}" | sed -e "s/${delimter}/ /g" );
+  # return section that has our server info
+  string=$(echo "${string}" | grep -oe "[^ ]*ServerName[|;][|;]*${url}[|;][|;]*[^ ]*")
+  # retrun the folderloaction
+  documentRoot=$(echo "${string}" | grep -oe "DocumentRoot[|]*[^ ;]*" | sed -e "s/^DocumentRoot['|]*//g" | sed -e "s/['|]*$//g" | sed -e 's/"*//g' )
+  # add back  any required spaces
+  documentRoot=$(echo "${documentRoot}" | sed -e "s/|/ /")
   echo ${documentRoot};
 }
 
@@ -177,8 +166,8 @@ function update_localxml() {
    else
      database=$1
      url=$2
-     grepped=$(grep -B 7 -A 8  ${url} ${vhost_file_location})
-     location=getVhostLocation ${url};
+     grepped=$(grep -B 7 -A 8  "${url}" ${vhost_file_location})
+     location=$(getVhostLocation "${url}")
      sed -i "s/<dbname>.*<\/dbname>/<dbname><\!\[CDATA\[${database}\]\]><\/dbname>/g" ${location}/app/etc/local.xml
   fi
 }
@@ -198,17 +187,19 @@ function mkvhost() {
       subfolder=$1;
       url=$2;
       restart="false";
-      if grep -q "${url}$" /etc/hosts ; then 
+      regexSubfolder=${subfolder//\//\\\/}
+      if grep -q "${url}" /etc/hosts ; then
          echo "--> no need to update hosts file"
       else
       	 echo "--> updating hosts file"
          echo '127.0.0.1 '${url} >> ${hostsfile};
          restart="true";
       fi
-      if grep -q "${url}$" /etc/apache2/extra/httpd-vhosts.conf ; then
+      if grep -q "${url}" /etc/apache2/extra/httpd-vhosts.conf ; then
           echo "--> no need to update vhosts file"
       else
           echo "--> updating vhosts file"
+          
           #vhostdefault=$( cat "${setupfile}"" );
           
           #vhostdefault=$(cat ~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt );
@@ -217,9 +208,10 @@ function mkvhost() {
           
           cp ~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt ~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt.swp
           sed -i "s/myurl/${url}/" ~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt.swp
-          sed -i "s/subfolder/${subfolder}/" ~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt.swp
+          sed -i "s/subfolder/${regexSubfolder}/" ~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt.swp
           cat ~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt.swp >> ${httpdvhosts};
-          
+          rm ~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt.swp
+
           restart="true";
       fi
       if [ "$restart" = "false" ] ; then
@@ -232,6 +224,7 @@ function mkvhost() {
 }
 
 # make vhost and setup magento
+######## needs work ########
 function setupLocalMagento() {
   if [  -z $1  ] || [  -z $2 ] || [  -z $3 ] ; then
       echo ;
@@ -244,11 +237,11 @@ function setupLocalMagento() {
       url=$3;
       htdocsLocation=$4
       if [  -z $5  ] ; then
-         dbname=$( echo ${dbfile} | sed 's/.*\///' ) &&
-         dbname=$( echo ${dbname} | sed 's/\..*///' )
-         dbname=${db//-/_}
+        dbname=${dbfile%.*};
+        dbname=${dbname##*/};
+        dbname=${dbname//-/_}; #make db name valid when created from filenames not valid db names
       else
-      dbname=$5
+        dbname=$5
       fi
       echo "------- importing database -------";
       import2mysql ${dbfile} ${url} ${dbname};
@@ -261,12 +254,14 @@ function setupLocalMagento() {
       echo "------- adding .htaccess -------";
       repo; # move to repos folder
       cd ${subfolder}
-      cd ${htdocsLocation}
+      if [ ! -z ${htdocsLocation} ] ; then
+        cd ${htdocsLocation}
+      fi
       cp ~/Documents/oh-my-zsh-extensions/local_setup_files/htaccess .htaccess
       echo "------- copying local.xml -------";
       cp ~/Documents/oh-my-zsh-extensions/local_setup_files/local.xml app/etc
       echo "------- updating local.xml -------";
-      update_localxml ${dbname} ${url};
+      update_localxml "${dbname}" "${url}";
       echo "------- flushing cache -------";
       n98-magerun.phar cache:flush;
       #echo "------- reindexing -------";
@@ -277,7 +272,7 @@ function setupLocalMagento() {
 # list all my vhosts in hosts file that are local
 function listhosts(){
   hosts_file_location='/etc/hosts';
-  string=$( grep '127.0.0.1' ${hosts_file_location} | sed -e"s/127.0.0.1//g" | sort);
+  string=$( grep '127.0.0.1' ${hosts_file_location} | sed -e"s/127\.0\.0\.1//g" | sort);
   if [ -z $1 ] ; then
     string=$(echo ${string} | sed -e"s/\s//g");
   else
