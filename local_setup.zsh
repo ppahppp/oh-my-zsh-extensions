@@ -133,7 +133,11 @@ function getVhostLocation() {
      return 1;
   fi
   url=$1
-  vhost_file_location='/etc/apache2/extra/httpd-vhosts.conf';
+  vhost_folder_location='/etc/apache2/extra';
+  if [ ! -d "${vhost_file_location}" ]; then
+  	vhost_folder_location='/etc/apache2/sites-available';
+  fi
+  vhost_file_location=$( grep --files-with-matches "${url}" $vhost_folder_location/* )
   string=$(cat ${vhost_file_location})
   #
   # remove spaces
