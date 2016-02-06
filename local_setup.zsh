@@ -140,12 +140,11 @@ function getVhostLocation() {
   vhost_file_location=$( grep --files-with-matches "${url}" $vhost_folder_location/* )
   string=$(cat ${vhost_file_location})
   #
-  # remove spaces
-  # spaces -> \
-  string=$( echo "${string}" | sed "s/[[:space:]]/|/g");
-  # add ||; to EOL and put into single line
+  # add ; to EOL and put into single line
   string=$( echo "${string}" | sed -e 's/$/;/g' | sed ':a;N;$!ba;s/\n//g' );
-  # add spaces to allow patern matching of space separetd sections
+  # spaces -> |
+  string=$( echo "${string}" | sed "s/[[:space:]]/|/g");
+  # add spaces to allow patern matching of space separeted sections
   delimter='<|*VirtualHost|*\*:80|*>'
   string=$( echo "${string}" | sed "s/${delimter}//g" );
   delimter='<|*\/|*VirtualHost|*>'
