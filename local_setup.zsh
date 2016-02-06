@@ -142,6 +142,7 @@ function getVhostLocation() {
   #
   # add ; to EOL and put into single line
   string=$( echo "${string}" | sed -e 's/$/;/g' | sed ':a;N;$!ba;s/\n//g' );
+  # for some reason my system so some systems dont always understand [[[:space:]];] as space or semi-colon, so 
   # spaces -> |
   string=$( echo "${string}" | sed "s/[[:space:]]/|/g");
   # add spaces to allow patern matching of space separeted sections
