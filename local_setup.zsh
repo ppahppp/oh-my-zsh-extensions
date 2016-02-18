@@ -275,6 +275,9 @@ function setupLocalMagento() {
       update_localxml "${dbname}" "${url}";
       echo "------- flushing cache -------";
       n98-magerun.phar cache:flush;
+      echo ran 'n98-magerun.phar cache:flush' here:
+      pwd
+      echo 'n98 sometimes throws an error on this line, just ignore it'
       #echo "------- reindexing -------";
       #n98-magerun.phar index:reindex:all;
     fi
