@@ -16,11 +16,13 @@ function tar2mysql() {
     echo ${db}
     echo '-->uncompressing file'
     tar -xzvf ${file} &&
-    file=${file%.*} &&
+    file=${file%.gz} &&
+    file=${file%.tar} &&
+    file=${file%.sql} &&
     file=${file##*/} &&
     sql2mysql ${file}.sql ${url} ${db}  &&
     echo '-->removing sql' &&
-    rm ${file} # $file redefined in sql2mysql() 
+    rm ${file} # $file redefined in sql2mysql()
   fi
 }
 
@@ -61,16 +63,17 @@ function sql2mysql() {
       if [  -z $3  ]; then
         db=${file%.sql};
         db=${db##*/};
-        db=${db//-/_}; #make db name valid when created from filenames not valid db names
+        db=${db//[-.]/_}; #make db name valid when created from filenames not valid db names
       else
         db=$3;
       fi
         dbexists=$(mysql -u${user} -p${password} --batch --skip-column-names -e "SHOW DATABASES LIKE '"${db}"';" | grep "${db}" > /dev/null; echo "$?")
       if [ ${dbexists} -eq 1 ]; then
         echo '-->creating db'
-        mysql -u${user} -p${password} -e"create database ${db}" 
+        mysql -u${user} -p${password} -e"create database ${db}"
         echo '-->importing db'
-        mysql -u${user} -p${password} $db < $file 
+        mysql -u${user} -p${password} ${db} < $file
+        echo "mysql -u${user} -p${password} ${db} < $file"
         echo '-->updating db'
         table='core_config_data' 
         cmd="update ${db}.${table} set value='http://${url}/' where path='web/unsecure/base_url';"
@@ -78,7 +81,7 @@ function sql2mysql() {
         cmd="update ${db}.${table} set value='http://${url}/' where path='web/secure/base_url';"
         mysql -u${user} -p${password} -e"${cmd}"
       else
-        echo "error: database name" ${db} " used"
+        echo "error: database name ${db} used"
       fi
     fi
 }
@@ -184,10 +187,10 @@ function mkvhost() {
       echo 'mkvhost <<sub folder>> <<url>>'
       echo 'please try again'
     else
-      subfolder=$1;
+      magentoSubfolder=$1;
       url=$2;
       restart="false";
-      regexSubfolder=${subfolder//\//\\\/}
+      regexSubfolder=${magentoSubfolder/\//\\\/}
       if grep -q "${url}" /etc/hosts ; then
          echo "--> no need to update hosts file"
       else
@@ -235,21 +238,29 @@ function setupLocalMagento() {
       subfolder=$1;
       dbfile=$2;
       url=$3;
-      htdocsLocation=$4
-      if [  -z $5  ] ; then
+      if [ -z $4 ] ; then
+        if [ -e "/Users/Paul/Documents/repositories/${subfolder}/htdocs" ] ; then
+            htdocsLocation="htdocs"
+        fi
+      else
+            htdocsLocation=$4
+      fi
+      if [  -z $5  ]; then
         dbname=${dbfile%.*};
+        dbname=${dbname%.tar};
         dbname=${dbname##*/};
-        dbname=${dbname//-/_}; #make db name valid when created from filenames not valid db names
+        dbname=${dbname//[-.]/_}; #make db name valid when created from filenames not valid db names
       else
         dbname=$5
       fi
       echo "------- importing database -------";
       import2mysql ${dbfile} ${url} ${dbname};
       echo "------- making vhost -------";
+      repo # move to repos folder
       if [  -z ${htdocsLocation}  ] ; then
           mkvhost ${subfolder} ${url};
       else
-          mkvhost "$subfolder\/$htdocsLocation" ${url};
+          mkvhost "${subfolder}/$htdocsLocation" ${url};
       fi
       echo "------- adding .htaccess -------";
       repo; # move to repos folder
