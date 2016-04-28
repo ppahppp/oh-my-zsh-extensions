@@ -80,6 +80,7 @@ function sql2mysql() {
         mysql -u${user} -p${password} -e"${cmd}"
         cmd="update ${db}.${table} set value='http://${url}/' where path='web/secure/base_url';"
         mysql -u${user} -p${password} -e"${cmd}"
+	echo "your database ${db} is imported"
       else
         echo "error: database name ${db} used"
       fi
