@@ -204,7 +204,7 @@ function mkvhost() {
       else
           echo "--> updating vhosts file"
           
-          #vhostdefault=$( cat "${setupfile}"" );
+          #vhostdefault=$( cat "${setupfile}" );
           
           #vhostdefault=$(cat ~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt );
          # vhostdetails=$( echo "${vhostdefault}" | sed -e"s/myurl/${url}/" | sed -e"s/subfolder/${subfolder}/" );

@@ -9,32 +9,28 @@ alias phpstorm='/Applications/PhpStorm.app/Contents/MacOS/phpstorm'
 alias phpstorm_diff='/Applications/PhpStorm.app/Contents/MacOS/phpstorm diff'
 
 function listCustomCommands(){
-	if [  -z $1  ] ; then
+  if [ "$1" = "git"  ] ; then
         grep function ~/.oh-my-zsh/custom/gitextension.zsh | grep -v 'grep' | sed -e's/\s*function\s*//' | cut -f1 -d"(" ;
-        grep function ~/.oh-my-zsh/custom/local_setup.zsh | grep -v 'grep' | sed -e's/\s*function\s*//' | cut -f1 -d"(" ;
-        grep function ~/.oh-my-zsh/custom/custom_misc.zsh | grep -v 'grep' | sed -e's/\s*function\s*//' | cut -f1 -d"(" ;
-        grep function ~/.oh-my-zsh/custom/personal.zsh | grep -v 'grep' | sed -e's/\s*function\s*//' | cut -f1 -d"(" ;
-
         grep alias ~/.oh-my-zsh/custom/gitextension.zsh | grep -v 'grep' | sed -e's/\s*alias\s*//' | cut -f1 -d"=" ;
+  elif [ "$1" = "local"  ] ; then
+        grep function ~/.oh-my-zsh/custom/local_setup.zsh | grep -v 'grep' | sed -e's/\s*function\s*//' | cut -f1 -d"(" ;
         grep alias ~/.oh-my-zsh/custom/local_setup.zsh | grep -v 'grep' | sed -e's/\s*alias\s*//' | cut -f1 -d"=" ;
+  elif [ "$1" = "custom"  ] ; then
+        grep function ~/.oh-my-zsh/custom/custom_misc.zsh | grep -v 'grep' | sed -e's/\s*function\s*//' | cut -f1 -d"(" ;
         grep alias ~/.oh-my-zsh/custom/custom_misc.zsh | grep -v 'grep' | sed -e's/\s*alias\s*//' | cut -f1 -d"=" ;
+  elif [ "$1" = "personal"  ] ; then
+        grep function ~/.oh-my-zsh/custom/personal.zsh | grep -v 'grep' | sed -e's/\s*function\s*//' | cut -f1 -d"(" ;
         grep alias ~/.oh-my-zsh/custom/personal.zsh | grep -v 'grep' | sed -e's/\s*alias\s*//' | cut -f1 -d"=" ;
-    else
-    	 if [ "$1" = "git"  ] ; then
-              grep function ~/.oh-my-zsh/custom/gitextension.zsh | grep -v 'grep' | sed -e's/\s*function\s*//' | cut -f1 -d"(" ;
-              grep alias ~/.oh-my-zsh/custom/gitextension.zsh | grep -v 'grep' | sed -e's/\s*alias\s*//' | cut -f1 -d"=" ;
-    	 fi
-    	 if [ "$1" = "local"  ] ; then
-              grep function ~/.oh-my-zsh/custom/local_setup.zsh | grep -v 'grep' | sed -e's/\s*function\s*//' | cut -f1 -d"(" ;
-              grep alias ~/.oh-my-zsh/custom/local_setup.zsh | grep -v 'grep' | sed -e's/\s*alias\s*//' | cut -f1 -d"=" ;
-    	 fi
-    	 if [ "$1" = "custom"  ] ; then
-              grep function ~/.oh-my-zsh/custom/custom_misc.zsh | grep -v 'grep' | sed -e's/\s*function\s*//' | cut -f1 -d"(" ;
-              grep alias ~/.oh-my-zsh/custom/custom_misc.zsh | grep -v 'grep' | sed -e's/\s*alias\s*//' | cut -f1 -d"=" ;
-    	 fi
-    	 if [ "$1" = "personal"  ] ; then
-              grep function ~/.oh-my-zsh/custom/personal.zsh | grep -v 'grep' | sed -e's/\s*function\s*//' | cut -f1 -d"(" ;
-              grep alias ~/.oh-my-zsh/custom/personal.zsh | grep -v 'grep' | sed -e's/\s*alias\s*//' | cut -f1 -d"=" ;
-    	 fi
-    fi;
+  else
+         { \
+          grep function ~/.oh-my-zsh/custom/gitextension.zsh | grep -v 'grep' | sed -e's/\s*function\s*//' | cut -f1 -d"(" ; \
+          grep function ~/.oh-my-zsh/custom/local_setup.zsh | grep -v 'grep' | sed -e's/\s*function\s*//' | cut -f1 -d"(" ; \
+          grep function ~/.oh-my-zsh/custom/custom_misc.zsh | grep -v 'grep' | sed -e's/\s*function\s*//' | cut -f1 -d"(" ; \
+          grep function ~/.oh-my-zsh/custom/personal.zsh | grep -v 'grep' | sed -e's/\s*function\s*//' | cut -f1 -d"(" ; \
+          grep alias ~/.oh-my-zsh/custom/gitextension.zsh | grep -v 'grep' | sed -e's/\s*alias\s*//' | cut -f1 -d"=" ; \
+          grep alias ~/.oh-my-zsh/custom/local_setup.zsh | grep -v 'grep' | sed -e's/\s*alias\s*//' | cut -f1 -d"=" ; \
+          grep alias ~/.oh-my-zsh/custom/custom_misc.zsh | grep -v 'grep' | sed -e's/\s*alias\s*//' | cut -f1 -d"=" ; \
+          grep alias ~/.oh-my-zsh/custom/personal.zsh | grep -v 'grep' | sed -e's/\s*alias\s*//' | cut -f1 -d"=" ; \
+        } | grep "${1}";
+  fi 
 }
