@@ -240,7 +240,7 @@ function setupLocalMagento() {
       dbfile=$2;
       url=$3;
       if [ -z $4 ] ; then
-        if [ -e "/Users/Paul/Documents/repositories/${subfolder}/htdocs" ] ; then
+        if [ -e "/Users/Paul/Documents/repositories/sites/${subfolder}/htdocs" ] ; then
             htdocsLocation="htdocs"
         fi
       else
@@ -264,7 +264,7 @@ function setupLocalMagento() {
           mkvhost "${subfolder}/$htdocsLocation" ${url};
       fi
       echo "------- adding .htaccess -------";
-      repo; # move to repos folder
+      sites; # move to repos folder
       cd ${subfolder}
       if [ ! -z ${htdocsLocation} ] ; then
         cd ${htdocsLocation}
