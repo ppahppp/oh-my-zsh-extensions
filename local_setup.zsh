@@ -137,11 +137,14 @@ function getVhostLocation() {
      return 1;
   fi
   url=$1
-  vhost_folder_location='/etc/apache2/extra';
-  if [ ! -d "${vhost_file_location}" ]; then
-  	vhost_folder_location='/etc/apache2/sites-available';
+  vhost_file_location='/Applications/MAMP/conf/apache/extra/httpd-vhosts.conf'
+  if [ ! -a "${vhost_file_location}" ]; then
+  	vhost_folder_location='/etc/apache2/extra';
+  	if [ ! -d "${vhost_folder_location}" ]; then
+  		vhost_folder_location='/etc/apache2/sites-available';
+  	fi
+  	vhost_file_location=$( grep --files-with-matches "${url}" $vhost_folder_location/* )
   fi
-  vhost_file_location=$( grep --files-with-matches "${url}" $vhost_folder_location/* )
   string=$(cat ${vhost_file_location})
   #
   # add ; to EOL and put into single line
@@ -165,7 +168,10 @@ function getVhostLocation() {
 
 # update local.xml with new db details (for magento 1.**)
 function update_localxml() {
-   vhost_file_location='/etc/apache2/extra/httpd-vhosts.conf'
+   vhost_file_location='/Applications/MAMP/conf/apache/extra/httpd-vhosts.conf';
+    if [ ! -a "${vhost_file_location}" ]; then
+      vhost_file_location = '/etc/apache2/extra/httpd-vhosts.conf';
+    fi  
    if [  -z $1  ] || [  -z $2 ] ; then
      echo ;
      echo 'arguments missing'
@@ -183,7 +189,10 @@ function update_localxml() {
 # make vhost but dont setup magento
 function mkvhost() {
     # file locations
-    httpdvhosts='/etc/apache2/extra/httpd-vhosts.conf'
+    httpdvhosts='/Applications/MAMP/conf/apache/extra/httpd-vhosts.conf';
+    if [ ! -a "${vhost_file_location}" ]; then
+      httpdvhosts = '/etc/apache2/extra/httpd-vhosts.conf';
+    fi
     hostsfile='/etc/hosts'
     setupfile='~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt'
     if [  -z $1  ] || [  -z $2 ] ; then
@@ -203,7 +212,8 @@ function mkvhost() {
          echo '127.0.0.1 '${url} >> ${hostsfile};
          restart="true";
       fi
-      if grep -q "${url}" /etc/apache2/extra/httpd-vhosts.conf ; then
+      
+      if grep -q "${url}" ${httpdvhosts} ; then
           echo "--> no need to update vhosts file"
       else
           echo "--> updating vhosts file"
