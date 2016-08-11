@@ -243,11 +243,16 @@ function mkvhost() {
 
 # make vhost and setup magento
 ######## needs work ########
-function setupLocalMagento() {
+function setupLocalMagento1() {
   if [  -z $1  ] || [  -z $2 ] || [  -z $3 ] ; then
       echo ;
+      echo 'import database, make into vhost, add .htaccess, copy local.xml'
+      echo "dosn't download git repo or create folder"
+      echo ''
       echo 'arguments missing'
-      echo 'setupLocalMagento <<sub folder>> <<db file>> <<url>>  or setupLocalMagento <<sub folder>> <<db file>> <<url>> <<htdocs location>> or setupLocalMagento <<sub folder>> <<db file>> <<url>> <<htdocs location>> <<db>>'
+      echo 'setupLocalMagento1 <<sub folder>> <<db file>> <<url>>'
+      echo 'or setupLocalMagento1 <<sub folder>> <<db file>> <<url>> <<htdocs location>>'
+      echo 'or setupLocalMagento1 <<sub folder>> <<db file>> <<url>> <<htdocs location>> <<db>>'
       echo 'please try again'
     else  
       subfolder=$1;
