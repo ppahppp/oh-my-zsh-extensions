@@ -197,6 +197,8 @@ function mkvhost() {
     setupfile='~/Documents/oh-my-zsh-extensions/local_setup_files/vhost_template.txt'
     if [  -z $1  ] || [  -z $2 ] ; then
       echo ;
+      echo 'sets up a vhost (adds to hotst file and httpd-vhosts.conf file)'
+      echo ''
       echo 'arguments missing'
       echo 'mkvhost <<sub folder>> <<url>>'
       echo 'please try again'
