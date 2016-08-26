@@ -239,6 +239,7 @@ function mkvhost() {
       else
          echo "--> restarting server"
          sudo apachectl restart
+         echo 'mamp users: please restart mamp'
       fi
     fi  
 }
@@ -302,6 +303,7 @@ function setupLocalMagento1() {
       echo 'n98 sometimes throws an error on this line, just ignore it'
       #echo "------- reindexing -------";
       #n98-magerun.phar index:reindex:all;
+      echo 'mamp users: please restart mamp'
     fi
 }
 

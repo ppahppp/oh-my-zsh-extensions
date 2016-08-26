@@ -35,9 +35,4 @@ function listCustomCommands(){
   fi 
 }
 
-function update-packages.juno.is(){
-	ssh root@packages.juno.is 'cd /var/www && eval $(ssh-agent) && ssh-add ~/.ssh/id_rsa_satis && php bin/satis build satis.json ./ -n'
-}
-function update-statics(){
-	ssh root@statics.juno.is './packager.sh update'
-}
+
