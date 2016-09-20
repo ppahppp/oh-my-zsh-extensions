@@ -33,7 +33,7 @@ function git_merge_branchs() {
   fi
 }
 function gm2b(){
-  echo "merge $2 into $1? (y/n)";
+  echo "merge $1 into $2? (y/n)";
   read sure;
   if  [[ $sure == "y" ]];
   then
