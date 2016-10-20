@@ -2,13 +2,10 @@ export PATH="/usr/local/mysql/bin:$PATH"
 
 alias gcd='git checkout develop'
 
-#alias gmm='echo git merging origin branch to master;echo ;echo -- checkout master --;git checkout master&&echo -- git pull -- &&  git pull&&echo --git merge--&& git merge'
-#alias gmd='echo git merging origin branch to develop;echo ;echo -- checkout develop --;git checkout develop&&echo -- git pull --&&  git pull&&echo --git merge--&& git merge'
-
-
 # show list of files that have conflicts
 gdf="git diff --name-only --diff-filter=U"
 
+# display current branch name e.g. master
 function git_current_branch(){
   git symbolic-ref --short HEAD
 }
@@ -21,6 +18,7 @@ function git_merge_branchs() {
     echo "merge one branch into another"
     echo "git_merge_branchs <<source branch>> <<destination branch>>"
     echo "e.g. git_merge_branchs branch1 master"
+    return
   else
     echo "\n-------\nremote update\n-------" \
     && git remote update  \
@@ -37,12 +35,13 @@ function git_merge_branchs() {
   fi
 }
 function gm2b(){
-  if [ "$1" = "-help" ]
+  if [ -z $2 ] || [ "$1" = "-help" ]
   then
     echo "merge one branch into another"
     echo "gm2b <<source branch>> <<destination branch>>"
     echo "use . to select current branch"
     echo "e.g. gmm branch1 branch2"
+    return
   fi
   if [ "$1" = "." ]
     then
@@ -74,6 +73,7 @@ function gmm (){
     echo "merge a branch to master:'gmm <<source branch>>'"
     echo "merge one branch into another, then into master: 'gmm <<source branch>> <<destination branch>>'"
     echo "e.g. gmm branch1 branch2"
+    return
   fi
   git rev-parse --show-toplevel #first line has to be a git command for auto complete o work
   BRANCH=$1;
@@ -101,6 +101,7 @@ function gmd (){
     echo "merge a branch to develop:'gmd <<source branch>>'"
     echo "merge one branch into another, then into develop: 'gmd <<source branch>> <<destination branch>>'"
     echo "e.g. gmd branch1 branch2"
+    return
   fi
   git rev-parse --show-toplevel #first line has to be a git command for auto complete o work
   if [  -z $1  ] || [ "$1" = "." ] 
@@ -118,7 +119,7 @@ function gmd (){
 }
 compdef _git gmd=git-merge
 
-
+# remote update and open gitk
 function gk() {
   if [ -z $1 ]
   then
@@ -136,6 +137,7 @@ function gk() {
   fi
 }
 
+# remote update and open gitx
 function gx() {
   if [ -z $1 ]
   then
@@ -152,6 +154,7 @@ function gx() {
     && gitx --all 
   fi
 }
+
 
 function gb2b() {
   if [ -z $1 ]
