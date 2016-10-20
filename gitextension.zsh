@@ -103,10 +103,10 @@ function gmd (){
     echo "e.g. gmd branch1 branch2"
     return
   fi
-  git rev-parse --show-toplevel #first line has to be a git command for auto complete o work
+  #git rev-parse --show-toplevel #first line has to be a git command for auto complete o work
   if [  -z $1  ] || [ "$1" = "." ] 
   then
-     git_merge_branchs $$(git_current_branch) develop;
+     git_merge_branchs $(git_current_branch) develop;
   else
     if [ -z $2 ]
     then
