@@ -170,7 +170,7 @@ function getVhostLocation() {
 function update_localxml() {
    vhost_file_location='/Applications/MAMP/conf/apache/extra/httpd-vhosts.conf';
     if [ ! -a "${vhost_file_location}" ]; then
-      vhost_file_location = '/etc/apache2/extra/httpd-vhosts.conf';
+      vhost_file_location='/etc/apache2/extra/httpd-vhosts.conf';
     fi  
    if [  -z $1  ] || [  -z $2 ] ; then
      echo ;
@@ -247,15 +247,15 @@ function mkvhost() {
 # make vhost and setup magento
 ######## needs work ########
 function setupLocalMagento1() {
-  if [  -z $1  ] || [  -z $2 ] || [  -z $3 ] ; then
+  if [  -z $3 ] ; then
       echo ;
       echo 'import database, make into vhost, add .htaccess, copy local.xml'
       echo "dosn't download git repo or create folder"
       echo ''
       echo 'arguments missing'
-      echo 'setupLocalMagento1 <<sub folder>> <<db file>> <<url>>'
-      echo 'or setupLocalMagento1 <<sub folder>> <<db file>> <<url>> <<htdocs location>>'
-      echo 'or setupLocalMagento1 <<sub folder>> <<db file>> <<url>> <<htdocs location>> <<db>>'
+      echo 'setupLocalMagento1 <<sub folder>> <<db sql file/name>> <<url>>'
+      echo 'or setupLocalMagento1 <<sub folder>> <<db sql file/name>> <<url>> <<htdocs location>>'
+      echo 'or setupLocalMagento1 <<sub folder>> <<db sql file/namee>> <<url>> <<htdocs location>> <<db>>'
       echo 'please try again'
     else  
       subfolder=$1;
@@ -268,16 +268,20 @@ function setupLocalMagento1() {
       else
             htdocsLocation=$4
       fi
-      if [  -z $5  ]; then
-        dbname=${dbfile%.*};
-        dbname=${dbname%.tar};
-        dbname=${dbname##*/};
-        dbname=${dbname//[-.]/_}; #make db name valid when created from filenames not valid db names
-      else
-        dbname=$5
-      fi
       echo "------- importing database -------";
-      import2mysql ${dbfile} ${url} ${dbname};
+      if [ "${dbfile%.*}" != "${dbfile}" ] ; then
+          if [  -z $5  ]; then
+            dbname=${dbfile%.*};
+            dbname=${dbname%.tar};
+            dbname=${dbname##*/};
+            dbname=${dbname//[-.]/_}; #make db name valid when created from filenames not valid db names
+          else
+            dbname=$5
+          fi
+          import2mysql ${dbfile} ${url} ${dbname};
+      else
+        dbname=${dbfile};
+      fi
       echo "------- making vhost -------";
       repo # move to repos folder
       if [  -z ${htdocsLocation}  ] ; then
